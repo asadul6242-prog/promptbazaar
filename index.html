@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PromptBazaar - AI Image Prompt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0B0C10;
+    --surface: #14151C;
+    --surface-2: #1B1D27;
+    --line: #262836;
+    --text: #EDEEF3;
+    --text-dim: #8B8D9C;
+    --violet: #9D6BFF;
+    --cyan: #3FD5E0;
+    --amber: #F2A93B;
+    --radius: 18px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Hind Siliguri', 'Inter', 'Noto Sans Devanagari', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x:hidden;
+  }
+  body[data-lang="en"]{ font-family:'Inter','Hind Siliguri',sans-serif; }
+  body[data-lang="hi"]{ font-family:'Noto Sans Devanagari','Hind Siliguri',sans-serif; }
+
+  .app{
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--bg);
+    position:relative;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* ---------- Header / hero ---------- */
+  .hero{
+    padding: 28px 20px 18px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero::before{
+    content:"";
+    position:absolute;
+    top:-120px; right:-80px;
+    width:280px; height:280px;
+    background: radial-gradient(circle, rgba(157,107,255,0.35), transparent 70%);
+    filter: blur(10px);
+    pointer-events:none;
+  }
+  .hero::after{
+    content:"";
+    position:absolute;
+    bottom:-140px; left:-60px;
+    width:240px; height:240px;
+    background: radial-gradient(circle, rgba(63,213,224,0.25), transparent 70%);
+    filter: blur(10px);
+    pointer-events:none;
+  }
+  .brand-row{
+    display:flex; align-items:center; justify-content:space-between;
+    position:relative; z-index:1;
+  }
+  .brand{
+    display:flex; align-items:center; gap:10px;
+  }
+  .brand-mark{
+    width:38px; height:38px; border-radius:11px;
+    background: linear-gradient(135deg, var(--violet), var(--cyan));
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Sora', sans-serif; font-weight:800; font-size:16px; color:#0B0C10;
+  }
+  .brand-name{
+    font-family:'Sora', sans-serif; font-weight:700; font-size:17px; letter-spacing:-0.2px;
+  }
+
+  .lang-switch{
+    display:flex; align-items:center;
+    background: var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:3px;
+    gap:2px;
+  }
+  .lang-btn{
+    font-family:'Inter',sans-serif;
+    font-size:11.5px; font-weight:700;
+    padding:6px 10px; border-radius:999px;
+    color: var(--text-dim);
+    cursor:pointer;
+    user-select:none;
+    transition: background .15s, color .15s;
+  }
+  .lang-btn.active{
+    background: linear-gradient(135deg, var(--violet), var(--cyan));
+    color:#0B0C10;
+  }
+
+  .hero h1{
+    font-family:'Sora', sans-serif;
+    font-weight:700;
+    font-size:26px;
+    line-height:1.3;
+    margin-top:22px;
+    max-width: 300px;
+    position:relative; z-index:1;
+  }
+  .hero p{
+    color: var(--text-dim);
+    font-size:14.5px;
+    margin-top:8px;
+    max-width:320px;
+    position:relative; z-index:1;
+  }
+
+  /* ---------- Search ---------- */
+  .search-wrap{
+    padding: 4px 20px 14px;
+  }
+  .search-box{
+    display:flex; align-items:center; gap:10px;
+    background: var(--surface);
+    border:1px solid var(--line);
+    border-radius: 14px;
+    padding: 12px 14px;
+  }
+  .search-box svg{flex-shrink:0; opacity:0.5;}
+  .search-box input{
+    background:none; border:none; outline:none;
+    color:var(--text); font-family:inherit;
+    font-size:14.5px; width:100%;
+  }
+  .search-box input::placeholder{color:var(--text-dim);}
+
+  /* ---------- Categories ---------- */
+  .cat-scroll{
+    display:flex; gap:9px;
+    overflow-x:auto;
+    padding: 2px 20px 18px;
+    scrollbar-width:none;
+  }
+  .cat-scroll::-webkit-scrollbar{display:none;}
+  .chip{
+    flex-shrink:0;
+    padding: 9px 16px;
+    border-radius: 999px;
+    background: var(--surface);
+    border:1px solid var(--line);
+    font-size:13.5px; font-weight:600;
+    color: var(--text-dim);
+    cursor:pointer;
+    transition: background .15s, color .15s, border-color .15s;
+    white-space:nowrap;
+    user-select:none;
+  }
+  .chip.active{
+    background: linear-gradient(135deg, var(--violet), #7A4FE0);
+    color:#fff;
+    border-color: transparent;
+  }
+
+  /* ---------- Feed ---------- */
+  .feed{
+    padding: 4px 20px 14px;
+    display:flex; flex-direction:column; gap:14px;
+    flex:1;
+  }
+
+  /* ---------- Banner ad (persistent) ---------- */
+  .banner-ad{
+    position:sticky; bottom:64px; left:0; right:0;
+    max-width:480px; margin:0 auto;
+    background: var(--surface-2);
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    display:flex; align-items:center; gap:10px;
+    padding: 9px 16px;
+    z-index:10;
+  }
+  .banner-ad .ad-badge{
+    font-size:9.5px; font-weight:700; letter-spacing:.3px;
+    color:#0B0C10; background:var(--amber);
+    padding:2px 6px; border-radius:5px; flex-shrink:0;
+  }
+  .banner-ad .ad-copy{flex:1; min-width:0;}
+  .banner-ad .ad-copy .t1{font-size:12.5px; font-weight:600; color:var(--text);}
+  .banner-ad .ad-copy .t2{font-size:11px; color:var(--text-dim);}
+  .banner-ad .ad-cta{
+    font-size:11.5px; font-weight:700; color:var(--cyan);
+    border:1px solid var(--line); padding:6px 11px; border-radius:9px;
+    flex-shrink:0;
+  }
+
+  .card{
+    background: var(--surface);
+    border:1px solid var(--line);
+    border-radius: var(--radius);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  .card-top{
+    display:flex; gap:12px;
+    padding:14px 14px 0;
+  }
+  .thumb{
+    width:64px; height:64px; border-radius:13px;
+    flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px;
+  }
+  .card-info{flex:1; min-width:0;}
+  .card-tag{
+    font-size:11.5px; font-weight:600; color:var(--cyan);
+  }
+  .card-title{
+    font-family:'Sora',sans-serif;
+    font-size:15px; font-weight:600;
+    margin-top:3px;
+    color:var(--text);
+  }
+  .card-body{
+    padding: 10px 14px 14px;
+  }
+  .prompt-text{
+    font-size:13.5px;
+    line-height:1.55;
+    color: var(--text-dim);
+    display:-webkit-box;
+    -webkit-line-clamp:3;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+    font-family:'Inter',sans-serif;
+  }
+  .card-actions{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 10px 14px 14px;
+  }
+  .fav-btn{
+    width:38px; height:38px; border-radius:11px;
+    background: var(--surface-2);
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; flex-shrink:0;
+    transition: background .15s;
+  }
+  .fav-btn svg{stroke:var(--text-dim); transition:stroke .15s, fill .15s;}
+  .fav-btn.active svg{stroke:var(--amber); fill:var(--amber);}
+  .copy-btn{
+    flex:1; margin-left:10px;
+    display:flex; align-items:center; justify-content:center; gap:7px;
+    background: linear-gradient(135deg, var(--cyan), var(--violet));
+    color:#0B0C10;
+    font-weight:700; font-size:13.5px;
+    padding:11px 14px; border-radius:12px;
+    border:none; cursor:pointer;
+    font-family:inherit;
+  }
+  .copy-btn:active{transform: scale(0.98);}
+  .copy-btn.copied{background:linear-gradient(135deg,#4ADE80,#22C55E); color:#06210F;}
+
+  .empty{
+    text-align:center;
+    padding: 60px 30px;
+    color: var(--text-dim);
+    font-size:14px;
+  }
+
+  /* ---------- Bottom nav ---------- */
+  .bottom-nav{
+    position:sticky; bottom:0; left:0; right:0;
+    max-width:480px; margin:0 auto;
+    background: rgba(20,21,28,0.92);
+    backdrop-filter: blur(14px);
+    border-top:1px solid var(--line);
+    display:flex; justify-content:space-around;
+    padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+  }
+  .nav-item{
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    color:var(--text-dim); font-size:11px; font-weight:600;
+    cursor:pointer;
+  }
+  .nav-item.active{color:var(--violet);}
+  .nav-item.active svg{stroke:var(--violet);}
+
+  /* ---------- Ad-gate modal ---------- */
+  .overlay{
+    position:fixed; inset:0;
+    background: rgba(5,5,8,0.78);
+    display:flex; align-items:center; justify-content:center;
+    z-index:50;
+    opacity:0; pointer-events:none;
+    transition: opacity .2s;
+  }
+  .overlay.show{opacity:1; pointer-events:auto;}
+  .ad-modal{
+    width: 86%; max-width:340px;
+    background: var(--surface);
+    border:1px solid var(--line);
+    border-radius: 20px;
+    padding: 24px 22px 22px;
+    text-align:center;
+    transform: translateY(12px) scale(0.97);
+    transition: transform .22s;
+    position:relative;
+  }
+  .overlay.show .ad-modal{transform: translateY(0) scale(1);}
+  .ad-ring{
+    width:74px; height:74px; margin:0 auto 16px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background: conic-gradient(var(--cyan) var(--pct,0%), var(--surface-2) 0%);
+    position:relative;
+  }
+  .ad-ring::before{
+    content:""; position:absolute; inset:6px;
+    border-radius:50%; background:var(--surface);
+  }
+  .ad-ring span{position:relative; font-family:'Sora',sans-serif; font-weight:700; font-size:18px;}
+  .ad-modal h3{font-family:'Sora',sans-serif; font-size:16px; margin-bottom:6px;}
+  .ad-modal p{font-size:13px; color:var(--text-dim); line-height:1.5;}
+  .ad-modal .fine{font-size:11.5px; color:#565968; margin-top:14px;}
+  .ad-close{
+    position:absolute; top:-14px; right:-14px;
+    width:32px; height:32px; border-radius:50%;
+    background:#1F2130; border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; color:var(--text-dim);
+    font-size:15px; font-weight:700;
+  }
+
+  .toast{
+    position:fixed; left:50%; bottom:90px;
+    transform: translateX(-50%) translateY(20px);
+    background:#1F2937; color:#fff;
+    padding: 11px 20px; border-radius: 12px;
+    font-size:13.5px; font-weight:600;
+    display:flex; align-items:center; gap:8px;
+    opacity:0; transition: all .25s;
+    pointer-events:none; z-index:60;
+    border:1px solid var(--line);
+    white-space:nowrap;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body data-lang="bn">
+<div class="app">
+
+  <div class="hero">
+    <div class="brand-row">
+      <div class="brand">
+        <div class="brand-mark">P</div>
+        <div class="brand-name">PromptBazaar</div>
+      </div>
+      <div class="lang-switch" id="langSwitch">
+        <div class="lang-btn active" data-lang="bn">বাং</div>
+        <div class="lang-btn" data-lang="en">EN</div>
+        <div class="lang-btn" data-lang="hi">हि</div>
+      </div>
+    </div>
+    <h1 id="heroTitle"></h1>
+    <p id="heroSub"></p>
+  </div>
+
+  <div class="search-wrap">
+    <div class="search-box">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="searchInput" type="text">
+    </div>
+  </div>
+
+  <div class="cat-scroll" id="catScroll"></div>
+
+  <div class="feed" id="feed"></div>
+
+  <div class="banner-ad">
+    <div class="ad-badge">AD</div>
+    <div class="ad-copy">
+      <div class="t1" id="bannerT1">Sponsored — Try Photo Editor Pro</div>
+      <div class="t2" id="bannerT2">banner ad placeholder · AdMob banner বসবে এখানে</div>
+    </div>
+    <div class="ad-cta" id="bannerCta">Install</div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item active">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+      <span id="navHome"></span>
+    </div>
+    <div class="nav-item" onclick="showFavOnly()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg>
+      <span id="navFav"></span>
+    </div>
+    <div class="nav-item">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/></svg>
+      <span id="navProfile"></span>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="adOverlay">
+  <div class="ad-modal">
+    <div class="ad-close" id="adCloseBtn" onclick="cancelAd()">✕</div>
+    <div class="ad-ring" id="adRing" style="--pct:0%"><span id="adCount">5</span></div>
+    <h3 id="adTitle"></h3>
+    <p id="adDesc"></p>
+    <div class="fine" id="adFine"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✅</div>
+
+<script>
+/* ---------------- Translations ---------------- */
+const I18N = {
+  bn: {
+    heroTitle: "প্রম্পট বেছে নিন, কপি করুন, ছবি বানান",
+    heroSub: "হাজারো রেডি AI ইমেজ প্রম্পট থেকে বেছে নিন, এক ট্যাপে কপি করে যেকোনো AI টুলে পেস্ট করুন",
+    searchPlaceholder: "প্রম্পট খুঁজুন... যেমন: cyberpunk, portrait",
+    navHome: "হোম", navFav: "পছন্দ", navProfile: "প্রোফাইল",
+    copyBtn: "কপি করুন", copied: "কপি হয়েছে",
+    emptyState: "কোনো প্রম্পট পাওয়া যায়নি।<br>অন্য ক্যাটাগরি বা সার্চ চেষ্টা করুন।",
+    adTitle: "বিজ্ঞাপন চলছে...",
+    adDesc: "এড শেষ হলেই প্রম্পটটা আপনার ক্লিপবোর্ডে কপি হয়ে যাবে",
+    adFine: "এড মাঝপথে বন্ধ করলে প্রম্পট কপি হবে না",
+    toastCopied: "✅ কপি হয়ে গেছে!",
+    toastCancelled: "❌ এড শেষ হয়নি, প্রম্পট কপি হয়নি",
+    bannerT1: "Sponsored — Try Photo Editor Pro",
+    bannerT2: "banner ad placeholder · AdMob banner বসবে এখানে",
+    bannerCta: "ইনস্টল",
+    categories: {all:"সব", trending:"ট্রেন্ডিং", portrait:"পোর্ট্রেট", fantasy:"ফ্যান্টাসি", anime:"অ্যানিমে", cyberpunk:"সাইবারপাংক", nature:"প্রকৃতি", logo:"লোগো", sticker:"স্টিকার"}
+  },
+  en: {
+    heroTitle: "Pick a prompt, copy it, create your image",
+    heroSub: "Choose from thousands of ready AI image prompts — copy in one tap and paste into any AI tool",
+    searchPlaceholder: "Search prompts... e.g. cyberpunk, portrait",
+    navHome: "Home", navFav: "Favorites", navProfile: "Profile",
+    copyBtn: "Copy Prompt", copied: "Copied",
+    emptyState: "No prompts found.<br>Try another category or search term.",
+    adTitle: "Ad playing...",
+    adDesc: "Your prompt will be copied to clipboard once the ad finishes",
+    adFine: "Closing the ad early cancels the copy",
+    toastCopied: "✅ Copied to clipboard!",
+    toastCancelled: "❌ Ad not finished, prompt not copied",
+    bannerT1: "Sponsored — Try Photo Editor Pro",
+    bannerT2: "banner ad placeholder · AdMob banner goes here",
+    bannerCta: "Install",
+    categories: {all:"All", trending:"Trending", portrait:"Portrait", fantasy:"Fantasy", anime:"Anime", cyberpunk:"Cyberpunk", nature:"Nature", logo:"Logo", sticker:"Sticker"}
+  },
+  hi: {
+    heroTitle: "प्रॉम्प्ट चुनें, कॉपी करें, इमेज बनाएं",
+    heroSub: "हजारों तैयार AI इमेज प्रॉम्प्ट में से चुनें, एक टैप में कॉपी करें और किसी भी AI टूल में पेस्ट करें",
+    searchPlaceholder: "प्रॉम्प्ट खोजें... जैसे: cyberpunk, portrait",
+    navHome: "होम", navFav: "पसंदीदा", navProfile: "प्रोफ़ाइल",
+    copyBtn: "कॉपी करें", copied: "कॉपी हो गया",
+    emptyState: "कोई प्रॉम्प्ट नहीं मिला।<br>दूसरी कैटेगरी या सर्च आज़माएं।",
+    adTitle: "विज्ञापन चल रहा है...",
+    adDesc: "विज्ञापन खत्म होते ही प्रॉम्प्ट आपके क्लिपबोर्ड में कॉपी हो जाएगा",
+    adFine: "विज्ञापन बीच में बंद करने पर कॉपी नहीं होगा",
+    toastCopied: "✅ कॉपी हो गया!",
+    toastCancelled: "❌ विज्ञापन पूरा नहीं हुआ, कॉपी नहीं हुआ",
+    bannerT1: "Sponsored — Try Photo Editor Pro",
+    bannerT2: "banner ad placeholder · यहां AdMob बैनर लगेगा",
+    bannerCta: "इंस्टॉल करें",
+    categories: {all:"सभी", trending:"ट्रेंडिंग", portrait:"पोर्ट्रेट", fantasy:"फैंटेसी", anime:"एनीमे", cyberpunk:"साइबरपंक", nature:"प्रकृति", logo:"लोगो", sticker:"स्टिकर"}
+  }
+};
+
+let currentLang = "bn";
+
+/* ---------------- Prompt data ---------------- */
+/* Prompt text (what gets copied) stays in English — that's what AI image tools understand best.
+   Title/tag are translated per language so the browsing experience matches the chosen language. */
+const DATA = [
+  {cat:"trending", emoji:"🔥", grad:["#9D6BFF","#3FD5E0"],
+    title:{bn:"সিনেমাটিক পোর্ট্রেট", en:"Cinematic Portrait", hi:"सिनेमैटिक पोर्ट्रेट"},
+    text:"Cinematic close-up portrait, golden hour lighting, shallow depth of field, 85mm lens, soft rim light, film grain, hyperrealistic skin texture, warm color grading"},
+  {cat:"portrait", emoji:"🧑", grad:["#F2A93B","#9D6BFF"],
+    title:{bn:"স্টুডিও হেডশট", en:"Studio Headshot", hi:"स्टूडियो हेडशॉट"},
+    text:"Professional studio headshot, neutral grey backdrop, softbox lighting from both sides, sharp focus on eyes, business attire, high resolution, magazine quality"},
+  {cat:"fantasy", emoji:"🐉", grad:["#3FD5E0","#7A4FE0"],
+    title:{bn:"ড্রাগন রাইডার", en:"Dragon Rider", hi:"ड्रैगन राइडर"},
+    text:"Epic fantasy warrior riding a massive dragon over misty mountains, dramatic storm clouds, glowing runes on armor, digital painting, artstation trending, 8k"},
+  {cat:"anime", emoji:"🎌", grad:["#FF6FA3","#9D6BFF"],
+    title:{bn:"রেট্রো অ্যানিমে হিরো", en:"Retro Anime Hero", hi:"रेट्रो एनीमे हीरो"},
+    text:"90s retro anime style character, vibrant cel shading, dynamic action pose, neon city background, hand-drawn line art, Studio Ghibli inspired color palette"},
+  {cat:"cyberpunk", emoji:"🌆", grad:["#3FD5E0","#0B0C10"],
+    title:{bn:"নিয়ন সিটি স্ট্রিট", en:"Neon City Street", hi:"नियॉन सिटी स्ट्रीट"},
+    text:"Cyberpunk street at night, neon signs reflecting on wet pavement, flying cars, holographic billboards, blade runner aesthetic, moody atmosphere, 4k detailed"},
+  {cat:"logo", emoji:"🎯", grad:["#F2A93B","#3FD5E0"],
+    title:{bn:"মিনিমাল ব্র্যান্ড লোগো", en:"Minimal Brand Logo", hi:"मिनिमल ब्रांड लोगो"},
+    text:"Minimalist geometric logo design, single color, negative space technique, vector style, modern tech brand, clean lines, white background, scalable icon"},
+  {cat:"sticker", emoji:"🐼", grad:["#9D6BFF","#FF6FA3"],
+    title:{bn:"কিউট প্যান্ডা স্টিকার", en:"Cute Panda Sticker", hi:"क्यूट पांडा स्टिकर"},
+    text:"Cute chibi panda sticker, kawaii style, thick white outline, flat pastel colors, die-cut sticker design, simple background, adorable expression"},
+  {cat:"trending", emoji:"✨", grad:["#7A4FE0","#F2A93B"],
+    title:{bn:"3D আইসোমেট্রিক রুম", en:"3D Isometric Room", hi:"3D आइसोमेट्रिक रूम"},
+    text:"Isometric 3D room illustration, cozy workspace, pastel color scheme, soft ambient occlusion, blender render style, tiny details, miniature diorama feel"},
+  {cat:"nature", emoji:"🏔️", grad:["#3FD5E0","#4ADE80"],
+    title:{bn:"রহস্যময় বন", en:"Mystic Forest", hi:"रहस्यमयी जंगल"},
+    text:"Misty enchanted forest at dawn, sunbeams piercing through tall trees, bioluminescent plants, fantasy landscape, ultra detailed, national geographic style"},
+  {cat:"portrait", emoji:"👗", grad:["#FF6FA3","#F2A93B"],
+    title:{bn:"হাই ফ্যাশন এডিটোরিয়াল", en:"High Fashion Editorial", hi:"हाई फैशन एडिटोरियल"},
+    text:"High fashion editorial photograph, avant-garde outfit, dramatic studio lighting, Vogue magazine style, bold makeup, sharp shadows, elegant pose"},
+  {cat:"anime", emoji:"🌸", grad:["#9D6BFF","#FF6FA3"],
+    title:{bn:"সাকুরা স্কুল সিন", en:"Sakura School Scene", hi:"साकुरा स्कूल सीन"},
+    text:"Anime school scene under cherry blossom trees, soft pastel lighting, detailed background art, slice of life style, gentle wind blowing petals"},
+  {cat:"cyberpunk", emoji:"🤖", grad:["#7A4FE0","#3FD5E0"],
+    title:{bn:"সাইবার যোদ্ধা", en:"Cyber Warrior", hi:"साइबर योद्धा"},
+    text:"Female cyborg warrior, glowing blue circuitry under synthetic skin, tactical armor plating, dystopian rooftop background, dramatic rim lighting, concept art"},
+];
+
+let activeCat = "all";
+let favs = new Set();
+let showFavsOnly = false;
+
+function t(key){ return I18N[currentLang][key]; }
+
+function applyStaticText(){
+  document.body.setAttribute('data-lang', currentLang);
+  document.documentElement.setAttribute('lang', currentLang);
+  document.getElementById('heroTitle').textContent = t('heroTitle');
+  document.getElementById('heroSub').textContent = t('heroSub');
+  document.getElementById('searchInput').placeholder = t('searchPlaceholder');
+  document.getElementById('navHome').textContent = t('navHome');
+  document.getElementById('navFav').textContent = t('navFav');
+  document.getElementById('navProfile').textContent = t('navProfile');
+  document.getElementById('adTitle').textContent = t('adTitle');
+  document.getElementById('adDesc').textContent = t('adDesc');
+  document.getElementById('adFine').textContent = t('adFine');
+  document.getElementById('bannerT1').textContent = t('bannerT1');
+  document.getElementById('bannerT2').textContent = t('bannerT2');
+  document.getElementById('bannerCta').textContent = t('bannerCta');
+}
+
+function renderCats(){
+  const catIds = ["all","trending","portrait","fantasy","anime","cyberpunk","nature","logo","sticker"];
+  const el = document.getElementById('catScroll');
+  el.innerHTML = catIds.map(id => `<div class="chip ${id===activeCat?'active':''}" data-id="${id}">${t('categories')[id]}</div>`).join('');
+  el.querySelectorAll('.chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      activeCat = chip.dataset.id;
+      showFavsOnly = false;
+      renderCats();
+      renderFeed();
+    });
+  });
+}
+
+function showFavOnly(){
+  showFavsOnly = true;
+  activeCat = "all";
+  renderCats();
+  renderFeed();
+}
+
+function renderFeed(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const feed = document.getElementById('feed');
+  let items = DATA.map((d,i)=>({...d, idx:i})).filter(d => activeCat==="all" || d.cat===activeCat);
+  if(showFavsOnly) items = items.filter(d => favs.has(d.idx));
+  if(q) items = items.filter(d => d.title[currentLang].toLowerCase().includes(q) || d.text.toLowerCase().includes(q));
+
+  if(items.length===0){
+    feed.innerHTML = `<div class="empty">${t('emptyState')}</div>`;
+    return;
+  }
+
+  feed.innerHTML = items.map(d=>{
+    const isFav = favs.has(d.idx);
+    const catLabel = t('categories')[d.cat];
+    return `
+    <div class="card">
+      <div class="card-top">
+        <div class="thumb" style="background:linear-gradient(135deg, ${d.grad[0]}, ${d.grad[1]})">${d.emoji}</div>
+        <div class="card-info">
+          <div class="card-tag">${catLabel}</div>
+          <div class="card-title">${d.title[currentLang]}</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="prompt-text">${d.text}</div>
+      </div>
+      <div class="card-actions">
+        <div class="fav-btn ${isFav?'active':''}" data-idx="${d.idx}" onclick="toggleFav(${d.idx})">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg>
+        </div>
+        <button class="copy-btn" data-idx="${d.idx}" onclick="startCopyFlow(${d.idx}, this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          ${t('copyBtn')}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleFav(idx){
+  if(favs.has(idx)) favs.delete(idx); else favs.add(idx);
+  renderFeed();
+}
+
+/* Every copy requires watching the rewarded ad in full — no free copies */
+function startCopyFlow(idx, btn){
+  const item = DATA[idx];
+  runAdThenCopy(item.text, btn);
+}
+
+let adTimer = null;
+let adCompleted = false;
+
+function runAdThenCopy(text, btn){
+  const overlay = document.getElementById('adOverlay');
+  const ring = document.getElementById('adRing');
+  const countEl = document.getElementById('adCount');
+  let seconds = 5;
+  adCompleted = false;
+  countEl.textContent = seconds;
+  ring.style.setProperty('--pct','0%');
+  overlay.classList.add('show');
+
+  adTimer = setInterval(()=>{
+    seconds--;
+    const pct = Math.round(((5-seconds)/5)*100);
+    ring.style.setProperty('--pct', pct+'%');
+    if(seconds <= 0){
+      clearInterval(adTimer);
+      adCompleted = true;
+      countEl.textContent = "✓";
+      setTimeout(()=>{
+        overlay.classList.remove('show');
+        doCopy(text, btn);
+      }, 350);
+    } else {
+      countEl.textContent = seconds;
+    }
+  }, 1000);
+}
+
+function cancelAd(){
+  if(adCompleted) return;
+  clearInterval(adTimer);
+  document.getElementById('adOverlay').classList.remove('show');
+  showToast(t('toastCancelled'));
+}
+
+function doCopy(text, btn){
+  navigator.clipboard?.writeText(text).catch(()=>{});
+  const original = btn.innerHTML;
+  btn.classList.add('copied');
+  btn.innerHTML = `✓ ${t('copied')}`;
+  showToast(t('toastCopied'));
+  setTimeout(()=>{
+    btn.classList.remove('copied');
+    btn.innerHTML = original;
+    renderFeed();
+  }, 1600);
+}
+
+function showToast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 1700);
+}
+
+document.getElementById('langSwitch').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.lang-btn');
+  if(!btn) return;
+  currentLang = btn.dataset.lang;
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active', b.dataset.lang===currentLang));
+  applyStaticText();
+  renderCats();
+  renderFeed();
+});
+
+document.getElementById('searchInput').addEventListener('input', renderFeed);
+
+applyStaticText();
+renderCats();
+renderFeed();
+</script>
+</body>
+</html>
