@@ -393,18 +393,28 @@
   </div>
 
   <div class="bottom-nav">
-    <div class="nav-item active">
+    <div class="nav-item active" id="navHomeItem" onclick="showHome()">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
       <span id="navHome"></span>
     </div>
-    <div class="nav-item" onclick="showFavOnly()">
+    <div class="nav-item" id="navFavItem" onclick="showFavOnly()">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg>
       <span id="navFav"></span>
     </div>
-    <div class="nav-item">
+    <div class="nav-item" id="navProfileItem" onclick="showProfile()">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/></svg>
       <span id="navProfile"></span>
     </div>
+  </div>
+</div>
+
+<div class="overlay" id="profileOverlay">
+  <div class="ad-modal">
+    <div class="ad-close" onclick="closeProfile()">✕</div>
+    <div class="brand-mark" style="margin:0 auto 14px;">P</div>
+    <h3 id="profileTitle">PromptBazaar</h3>
+    <p id="profileDesc"></p>
+    <div class="fine" id="profileVersion">Version 1.0</div>
   </div>
 </div>
 
@@ -425,7 +435,7 @@
 const I18N = {
   bn: {
     heroTitle: "প্রম্পট বেছে নিন, কপি করুন, ছবি বানান",
-    heroSub: "হাজারো রেডি AI ইমেজ প্রম্পট থেকে বেছে নিন, এক ট্যাপে কপি করে যেকোনো AI টুলে পেস্ট করুন",
+    heroSub: "১০০০+ রেডি AI ইমেজ প্রম্পট, প্রতিদিন নতুন প্রম্পট যোগ হয় — এক ট্যাপে কপি করে যেকোনো AI টুলে পেস্ট করুন",
     searchPlaceholder: "প্রম্পট খুঁজুন... যেমন: cyberpunk, portrait",
     navHome: "হোম", navFav: "পছন্দ", navProfile: "প্রোফাইল",
     copyBtn: "কপি করুন", copied: "কপি হয়েছে",
@@ -438,6 +448,7 @@ const I18N = {
     bannerT1: "Sponsored — Try Photo Editor Pro",
     bannerT2: "banner ad placeholder · AdMob banner বসবে এখানে",
     bannerCta: "ইনস্টল",
+    profileDesc: "এটি একটি AI ইমেজ প্রম্পট লাইব্রেরি অ্যাপ। প্রম্পট কপি করে যেকোনো AI ইমেজ টুলে (Midjourney, Gemini, DALL-E) পেস্ট করে ছবি বানান।",
     categories: {all:"সব", trending:"ট্রেন্ডিং", portrait:"পোর্ট্রেট", fantasy:"ফ্যান্টাসি", anime:"অ্যানিমে", cyberpunk:"সাইবারপাংক", nature:"প্রকৃতি", logo:"লোগো", sticker:"স্টিকার"}
   },
   en: {
@@ -455,6 +466,7 @@ const I18N = {
     bannerT1: "Sponsored — Try Photo Editor Pro",
     bannerT2: "banner ad placeholder · AdMob banner goes here",
     bannerCta: "Install",
+    profileDesc: "This is an AI image prompt library app. Copy a prompt and paste it into any AI image tool (Midjourney, Gemini, DALL-E) to create your image.",
     categories: {all:"All", trending:"Trending", portrait:"Portrait", fantasy:"Fantasy", anime:"Anime", cyberpunk:"Cyberpunk", nature:"Nature", logo:"Logo", sticker:"Sticker"}
   },
   hi: {
@@ -472,6 +484,7 @@ const I18N = {
     bannerT1: "Sponsored — Try Photo Editor Pro",
     bannerT2: "banner ad placeholder · यहां AdMob बैनर लगेगा",
     bannerCta: "इंस्टॉल करें",
+    profileDesc: "यह एक AI इमेज प्रॉम्प्ट लाइब्रेरी ऐप है। प्रॉम्प्ट कॉपी करें और किसी भी AI इमेज टूल (Midjourney, Gemini, DALL-E) में पेस्ट करके इमेज बनाएं।",
     categories: {all:"सभी", trending:"ट्रेंडिंग", portrait:"पोर्ट्रेट", fantasy:"फैंटेसी", anime:"एनीमे", cyberpunk:"साइबरपंक", nature:"प्रकृति", logo:"लोगो", sticker:"स्टिकर"}
   }
 };
@@ -541,6 +554,7 @@ function applyStaticText(){
   document.getElementById('bannerT1').textContent = t('bannerT1');
   document.getElementById('bannerT2').textContent = t('bannerT2');
   document.getElementById('bannerCta').textContent = t('bannerCta');
+  document.getElementById('profileDesc').textContent = t('profileDesc');
 }
 
 function renderCats(){
@@ -551,17 +565,44 @@ function renderCats(){
     chip.addEventListener('click', ()=>{
       activeCat = chip.dataset.id;
       showFavsOnly = false;
+      setActiveNav('home');
       renderCats();
       renderFeed();
     });
   });
 }
 
+function setActiveNav(which){
+  document.getElementById('navHomeItem').classList.toggle('active', which==='home');
+  document.getElementById('navFavItem').classList.toggle('active', which==='fav');
+  document.getElementById('navProfileItem').classList.toggle('active', which==='profile');
+}
+
+function showHome(){
+  showFavsOnly = false;
+  activeCat = "all";
+  document.getElementById('searchInput').value = "";
+  setActiveNav('home');
+  renderCats();
+  renderFeed();
+}
+
 function showFavOnly(){
   showFavsOnly = true;
   activeCat = "all";
+  setActiveNav('fav');
   renderCats();
   renderFeed();
+}
+
+function showProfile(){
+  setActiveNav('profile');
+  document.getElementById('profileOverlay').classList.add('show');
+}
+
+function closeProfile(){
+  document.getElementById('profileOverlay').classList.remove('show');
+  setActiveNav(showFavsOnly ? 'fav' : 'home');
 }
 
 function renderFeed(){
